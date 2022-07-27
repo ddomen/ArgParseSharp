@@ -3,6 +3,8 @@ using System.Reflection;
 
 namespace ArgParseSharp;
 
+using T = Type;
+
 public partial class Argument {
     protected string _name;
     protected Delegate? _type;
@@ -22,7 +24,7 @@ public partial class Argument {
         get => _default;
         set => _default = value;
     }
-    public Delegate? Type {
+    public Delegate? Parser {
         get => _type;
         set => SetType(_type);
     }
@@ -45,7 +47,7 @@ public partial class Argument {
         _name = !string.IsNullOrEmpty(name) ? name : throw new ArgumentNullException(nameof(name));
         Constant = constant;
     }
-    public Argument(string name, Parser? parser) : this(name, (Delegate?)parser) { }
+    public Argument(string name, ParserDelegate? parser) : this(name, (Delegate?)parser) { }
     public Argument(string name, Delegate? parser) {
         _name = !string.IsNullOrEmpty(name) ? name : throw new ArgumentNullException(nameof(name));
         SetType(parser);
@@ -53,14 +55,14 @@ public partial class Argument {
 
     public object? Parse(string value) => Resolve(Ignore(value));
 
-    public delegate object? Parser(string value);
+    public delegate object? ParserDelegate(string value);
 
-    internal static bool CheckReturn(MethodInfo? method, Type type) => method is not null && method.ReturnType == type;
+    internal static bool CheckReturn(MethodInfo? method, T type) => method is not null && method.ReturnType == type;
     internal static bool CheckReturnVoid(MethodInfo? method) => method is not null && method.ReturnType == typeof(void);
-    internal static bool CheckParameters(MethodInfo? method, params Type[] parameters) {
+    internal static bool CheckParameters(MethodInfo? method, params T[] parameters) {
         if (method is null) { return false; }
-        parameters ??= System.Type.EmptyTypes;
-        Type[] args = method.GetParameters().Select(p => p.ParameterType).ToArray();
+        parameters ??= T.EmptyTypes;
+        T[] args = method.GetParameters().Select(p => p.ParameterType).ToArray();
         return args.Length == parameters.Length &&
                 args.Zip(parameters, (a, p) => p.IsAssignableFrom(a)).All(b => b);
     }
@@ -74,9 +76,9 @@ public partial class Argument {
 
     protected virtual object? Resolve(string value) =>
         Constant.HasValue ? Constant.Value :
-        (_type ?? throw new NullReferenceException(nameof(Type))).DynamicInvoke(value);
+        (_type ?? throw new NullReferenceException(nameof(Parser))).DynamicInvoke(value);
 
-    internal virtual void CheckDelegate(MethodInfo? method) {
+    protected virtual void CheckDelegate(MethodInfo? method) {
         if (Constant.HasValue) { return; }
         if (method is null) { throw new ArgumentNullException("type"); }
         if (CheckReturnVoid(method)) { throw new ArgumentException("Type must return a value"); }
@@ -170,12 +172,12 @@ public class Argument<T> : Argument {
         set => _default = value;
     }
     public Argument(string name, T? constant) : base(name, constant) { Default = default(T); }
-    public Argument(string name, Parser? type) : base(name, type) { Default = default(T); }
+    public Argument(string name, ParserDelegate? type) : base(name, type) { Default = default(T); }
     public new T? Parse(string value) => ResolveChecked(Ignore(value));
     protected override object? Resolve(string value) => ResolveChecked(value);
     protected virtual T? ResolveChecked(string value) =>
         Constant.HasValue ? Constant.Value :
-        (T?)(_type ?? throw new NullReferenceException(nameof(Type))).DynamicInvoke(value);
+        (T?)(_type ?? throw new NullReferenceException(nameof(Argument.Parser))).DynamicInvoke(value);
     public void SetConstant(Nullable<T> constant) {
         if (!constant.HasValue) { CheckDelegate(_type?.Method); }
         _constant = constant;
@@ -187,5 +189,6 @@ public class Argument<T> : Argument {
         if (!CheckReturn(method, typeof(T))) { throw new ArgumentException($"Type must return a value of type {typeof(T)} but returned {method?.ReturnType}"); }
     }
 
-    public new delegate T? Parser(string value);
+    public new delegate T? ParserDelegate(string value);
+
 }

@@ -2,8 +2,8 @@
 
 namespace ArgParseSharp;
 
-[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
-public class ArgumentAttribtue : Attribute {
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+public class ArgumentAttribute : Attribute {
     protected Delegate? _type;
     protected Nullable<object> _constant;
     public string? Name { get; set; }
@@ -14,7 +14,7 @@ public class ArgumentAttribtue : Attribute {
         set => SetConstant(value);
     }
     public Nullable<object> Default { get; set; }
-    public Delegate? Type {
+    public Delegate? Parser {
         get => _type;
         set => SetType(_type);
     }
@@ -36,11 +36,11 @@ public class ArgumentAttribtue : Attribute {
         (Flags ?? Enumerable.Empty<string>()).Prepend(Name);
 
     protected virtual Type _resultType => typeof(object);
-    protected virtual Type _delegateType => typeof(Argument.Parser);
+    protected virtual Type _delegateType => typeof(Argument.ParserDelegate);
 
-    public ArgumentAttribtue(object? constant) => Constant = constant;
-    public ArgumentAttribtue(Type parserOwner, string? parserName = null) => SetType(parserOwner, parserName);
-    protected ArgumentAttribtue(Delegate? type) => SetType(type);
+    public ArgumentAttribute(object? constant) => Constant = constant;
+    public ArgumentAttribute(Type parserOwner, string? parserName = null) => SetType(parserOwner, parserName);
+    protected ArgumentAttribute(Delegate? type) => SetType(type);
     protected void CheckDelegate(MethodInfo? method) {
         if (method is null) { throw new ArgumentNullException("type"); }
         if (!CheckReturn(method, _resultType)) { throw new ArgumentException($"Expected parser to return {_resultType} but it returned {method.ReturnType}"); }
@@ -82,7 +82,7 @@ public class ArgumentAttribtue : Attribute {
     internal Argument CreateArgument(string name) =>
         Constant.HasValue ?
             CreateArgument(name, Constant) :
-            CreateArgument(name, MakeDelegate(Type));
+            CreateArgument(name, MakeDelegate(Parser));
     protected virtual Argument CreateArgument(string name, Nullable<object> constant) => new(name, constant);
     protected virtual Argument CreateArgument(string name, Delegate? type) => new(name, type);
     protected virtual Delegate? MakeDelegate(Delegate? target) =>
@@ -113,3 +113,10 @@ public class ArgumentAttribtue : Attribute {
 
     public const string DEFAULT_PARSER_NAME = "DefaultParser";
 }
+
+
+[AttributeUsage(
+    AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class | AttributeTargets.Struct,
+    AllowMultiple = false, Inherited = true
+)]
+public sealed class Ignore : Attribute { }
