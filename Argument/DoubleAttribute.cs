@@ -8,7 +8,7 @@ public partial class Argument {
         public DoubleAttribute() : base(Double.DefaultParser) { }
         public DoubleAttribute(double constant) : base(constant) { }
         public DoubleAttribute(Type parserOwner, string? parserName = null) : base(parserOwner, parserName) { }
-        internal override Argument CreateArgument(string name, Delegate? type) => new Double(name, (Double.Parser?)type);
-        internal override Argument CreateArgument(string name, Nullable<object> value) => new Double(name, value.As<double>());
+        protected override Argument CreateArgument(string name, Delegate? type) => new Double(name, (Double.Parser?)type);
+        protected override Argument CreateArgument(string name, Nullable<object> value) => new Double(name, value.As<double>());
     }
 }

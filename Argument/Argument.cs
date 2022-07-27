@@ -55,21 +55,20 @@ public partial class Argument {
 
     public delegate object? Parser(string value);
 
-    protected static bool CheckReturn(MethodInfo? method, Type type) =>
-        method is not null && method.ReturnType == type;
-    protected static bool CheckReturnVoid(MethodInfo? method) =>
-        method is not null && method.ReturnType == typeof(void);
-    protected static bool CheckParameters(MethodInfo? method, params Type[] parameters) {
+    internal static bool CheckReturn(MethodInfo? method, Type type) => method is not null && method.ReturnType == type;
+    internal static bool CheckReturnVoid(MethodInfo? method) => method is not null && method.ReturnType == typeof(void);
+    internal static bool CheckParameters(MethodInfo? method, params Type[] parameters) {
         if (method is null) { return false; }
         parameters ??= System.Type.EmptyTypes;
         Type[] args = method.GetParameters().Select(p => p.ParameterType).ToArray();
         return args.Length == parameters.Length &&
                 args.Zip(parameters, (a, p) => p.IsAssignableFrom(a)).All(b => b);
     }
+    internal static bool StartsWith(string target, string prefixChars) => (target?.Length ?? 0) > 0 && prefixChars.Any(p => target![0] == p);
 
-    protected string Ignore(string value) {
+    internal string Ignore(string value) {
         if (IgnoredPrefix is not null && value.StartsWith(IgnoredPrefix)) { value = value.Substring(IgnoredPrefix.Length); }
-        if (IgnoredSuffix is not null && value.StartsWith(IgnoredSuffix)) { value = value.Substring(IgnoredSuffix.Length); }
+        if (IgnoredSuffix is not null && value.EndsWith(IgnoredSuffix)) { value = value.Substring(0, value.Length - IgnoredSuffix.Length); }
         return value;
     }
 
@@ -77,7 +76,7 @@ public partial class Argument {
         Constant.HasValue ? Constant.Value :
         (_type ?? throw new NullReferenceException(nameof(Type))).DynamicInvoke(value);
 
-    protected virtual void CheckDelegate(MethodInfo? method) {
+    internal virtual void CheckDelegate(MethodInfo? method) {
         if (Constant.HasValue) { return; }
         if (method is null) { throw new ArgumentNullException("type"); }
         if (CheckReturnVoid(method)) { throw new ArgumentException("Type must return a value"); }
@@ -94,12 +93,9 @@ public partial class Argument {
         _constant = constant;
     }
     internal bool IsPositional(string prefixChars) => !StartsWith(Name, prefixChars);
-    internal bool Contains(string arg, char[] prefixes, bool ignoreCase) =>
-        Identifiers.Any(i => (ignoreCase ? i.ToLower() : i).TrimStart(prefixes) == arg.TrimStart(prefixes));
-    internal bool Contains(string arg, string prefixes, bool ignoreCase) =>
-        Contains(arg, prefixes.ToCharArray(), ignoreCase);
-    internal static bool StartsWith(string target, string prefixChars) =>
-        (target?.Length ?? 0) > 0 && prefixChars.Any(p => target![0] == p);
+    internal bool Contains(string arg, char[] prefixes, bool ignoreCase) => Identifiers.Any(i => (ignoreCase ? i.ToLower() : i).TrimStart(prefixes) == arg.TrimStart(prefixes));
+    internal bool Contains(string arg, string prefixes, bool ignoreCase) => Contains(arg, prefixes.ToCharArray(), ignoreCase);
+
     internal bool TryResolve(string[] arguments, ref int index, out object? value, string prefixes, bool ignoreCase) {
         value = null;
         bool isPositional = IsPositional(prefixes);

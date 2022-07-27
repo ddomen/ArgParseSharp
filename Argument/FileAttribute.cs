@@ -8,7 +8,7 @@ public partial class Argument {
         public FileAttribute() : base(File.DefaultParser) { }
         public FileAttribute(string? constant) : base(constant) { }
         public FileAttribute(Type parserOwner, string? parserName = null) : base(parserOwner, parserName) { }
-        internal override Argument CreateArgument(string name, Delegate? type) => new File(name, (File.Parser?)type);
-        internal override Argument CreateArgument(string name, Nullable<object> value) => new File(name, value.As<FileInfo>());
+        protected override Argument CreateArgument(string name, Delegate? type) => new File(name, (File.Parser?)type);
+        protected override Argument CreateArgument(string name, Nullable<object> value) => new File(name, value.As<FileInfo>());
     }
 }

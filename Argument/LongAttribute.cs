@@ -8,7 +8,7 @@ public partial class Argument {
         public LongAttribute() : base(Long.DefaultParser) { }
         public LongAttribute(long constant) : base(constant) { }
         public LongAttribute(Type parserOwner, string? parserName = null) : base(parserOwner, parserName) { }
-        internal override Argument CreateArgument(string name, Delegate? type) => new Long(name, (Long.Parser?)type);
-        internal override Argument CreateArgument(string name, Nullable<object> value) => new Long(name, value.As<long>());
+        protected override Argument CreateArgument(string name, Delegate? type) => new Long(name, (Long.Parser?)type);
+        protected override Argument CreateArgument(string name, Nullable<object> value) => new Long(name, value.As<long>());
     }
 }

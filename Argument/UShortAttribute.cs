@@ -8,7 +8,7 @@ public partial class Argument {
         public UShortAttribute() : base(UShort.DefaultParser) { }
         public UShortAttribute(ushort constant) : base(constant) { }
         public UShortAttribute(Type parserOwner, string? parserName = null) : base(parserOwner, parserName) { }
-        internal override Argument CreateArgument(string name, Delegate? type) => new UShort(name, (UShort.Parser?)type);
-        internal override Argument CreateArgument(string name, Nullable<object> value) => new UShort(name, value.As<ushort>());
+        protected override Argument CreateArgument(string name, Delegate? type) => new UShort(name, (UShort.Parser?)type);
+        protected override Argument CreateArgument(string name, Nullable<object> value) => new UShort(name, value.As<ushort>());
     }
 }

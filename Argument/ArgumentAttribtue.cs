@@ -83,9 +83,9 @@ public class ArgumentAttribtue : Attribute {
         Constant.HasValue ?
             CreateArgument(name, Constant) :
             CreateArgument(name, MakeDelegate(Type));
-    internal virtual Argument CreateArgument(string name, Nullable<object> constant) => new(name, constant);
-    internal virtual Argument CreateArgument(string name, Delegate? type) => new(name, type);
-    internal virtual Delegate? MakeDelegate(Delegate? target) =>
+    protected virtual Argument CreateArgument(string name, Nullable<object> constant) => new(name, constant);
+    protected virtual Argument CreateArgument(string name, Delegate? type) => new(name, type);
+    protected virtual Delegate? MakeDelegate(Delegate? target) =>
         target is null ? null :
         _delegateType.IsInstanceOfType(target) ? target :
         target.Method.IsStatic ?

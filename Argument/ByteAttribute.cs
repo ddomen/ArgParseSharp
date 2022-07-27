@@ -8,7 +8,7 @@ public partial class Argument {
         public ByteAttribute() : base(Byte.DefaultParser) { }
         public ByteAttribute(byte constant) : base(constant) { }
         public ByteAttribute(Type parserOwner, string? parserName = null) : base(parserOwner, parserName) { }
-        internal override Argument CreateArgument(string name, Delegate? type) => new Byte(name, (Byte.Parser?)type);
-        internal override Argument CreateArgument(string name, Nullable<object> value) => new Byte(name, value.As<byte>());
+        protected override Argument CreateArgument(string name, Delegate? type) => new Byte(name, (Byte.Parser?)type);
+        protected override Argument CreateArgument(string name, Nullable<object> value) => new Byte(name, value.As<byte>());
     }
 }

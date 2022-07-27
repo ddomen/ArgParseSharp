@@ -32,6 +32,53 @@ public class ArgumentParser {
         ThrowOnConflicts ? throw new ArgumentException($"Argument conflicting option: {flag}") :
         true;
 
+    private static bool IsNullableType(Type type) =>
+        !type.IsValueType || Nullable.GetUnderlyingType(type) is not null;
+
+    private static ConstructorInfo? RetrieveCtor(Type type, Type?[] args) {
+        List<ConstructorInfo> ctors = new();
+        bool mustInfer = args.Contains(null);
+        ParameterInfo[] ps;
+        ParameterInfo p;
+        Type? t;
+        Type pt;
+        bool exact;
+        bool assignable;
+
+        int argLen = args.Length;
+        foreach (ConstructorInfo ctor in type.GetConstructors()) {
+            ps = ctor.GetParameters();
+            assignable = true;
+            exact = ps.Length == argLen;
+            for (int i = 0; i < ps.Length; ++i) {
+                p = ps[i];
+                pt = p.ParameterType;
+                if (i < argLen) { t = args[i]; }
+                else if (!p.IsOptional) { assignable = false; break; }
+                else { t = pt; exact = false; }
+                if (t is null) {
+                    if (!IsNullableType(pt)) { assignable = false; break; }
+                    t = pt;
+                }
+                if (!pt.IsAssignableFrom(t)) { assignable = false; break; }
+                exact = exact && pt == t;
+            }
+            if (exact) { return ctor; }
+            if (assignable) { ctors.Add(ctor); }
+        }
+        return ctors.Count == 1 ? ctors[0] : null;
+    }
+    private static Argument CreateArgument(Type argumentType, params object?[]? values) {
+        if (argumentType is null) { throw new ArgumentNullException(nameof(argumentType)); }
+        if (!typeof(Argument).IsAssignableFrom(argumentType)) { throw new ArgumentException($"The given type {argumentType} does not extends {typeof(Argument)}"); }
+        ConstructorInfo? ctor = RetrieveCtor(
+            argumentType,
+            (values ?? Array.Empty<object?>()).Select(v => v?.GetType()).ToArray()
+        );
+        return ctor is null ? throw new ArgumentException("No constructor found for the given inptus") : (Argument)ctor.Invoke(values);
+    }
+    private static A CreateArgument<A>(params object?[]? values) where A : Argument => (A)CreateArgument(typeof(A), values);
+
     public void AddArgument(Argument argument) {
         if (argument is null) { throw new ArgumentNullException(nameof(argument)); }
         string[] ids = argument.Identifiers.ToArray();
@@ -42,15 +89,26 @@ public class ArgumentParser {
         }
         _args.Add(argument);
     }
+    public void AddArgument(Type argumentType, params object?[]? values) =>
+        AddArgument(CreateArgument(argumentType, values));
+    public void AddArgument(Type argumentType, Action<Argument> configurator, params object?[]? values) {
+        Argument arg = CreateArgument(argumentType, values);
+        configurator?.Invoke(arg);
+        AddArgument(arg);
+    }
     public void AddArgument<T>(string name, T? value) => AddArgument(new Argument<T>(name, value));
     public void AddArgument<A>(string name, Action<A>? configurator = null) where A : Argument {
-        A? arg = (A)Activator.CreateInstance(typeof(A), name);
+        A? arg = CreateArgument<A>(name);
         configurator?.Invoke(arg);
         AddArgument(arg);
     }
     public void AddArgument<A>(Action<A>? configurator = null) where A : Argument {
-        A? arg = (A)Activator.CreateInstance(typeof(A));
+        A? arg = CreateArgument<A>();
         configurator?.Invoke(arg);
+        AddArgument(arg);
+    }
+    public void AddArgument<A>(params object?[] constructorArgs) where A : Argument {
+        A? arg = CreateArgument<A>(constructorArgs);
         AddArgument(arg);
     }
 

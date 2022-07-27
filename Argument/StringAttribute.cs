@@ -8,7 +8,7 @@ public partial class Argument {
         public StringAttribute() : base(String.DefaultParser) { }
         public StringAttribute(string? constant) : base(constant) { }
         public StringAttribute(Type parserOwner, string? parserName = null) : base(parserOwner, parserName) { }
-        internal override Argument CreateArgument(string name, Delegate? type) => new String(name, (String.Parser?)type);
-        internal override Argument CreateArgument(string name, Nullable<object> value) => new String(name, value.As<string>());
+        protected override Argument CreateArgument(string name, Delegate? type) => new String(name, (String.Parser?)type);
+        protected override Argument CreateArgument(string name, Nullable<object> value) => new String(name, value.As<string>());
     }
 }

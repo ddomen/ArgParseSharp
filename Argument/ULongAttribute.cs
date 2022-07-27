@@ -8,7 +8,7 @@ public partial class Argument {
         public ULongAttribute() : base(ULong.DefaultParser) { }
         public ULongAttribute(ulong constant) : base(constant) { }
         public ULongAttribute(Type parserOwner, string? parserName = null) : base(parserOwner, parserName) { }
-        internal override Argument CreateArgument(string name, Delegate? type) => new ULong(name, (ULong.Parser?)type);
-        internal override Argument CreateArgument(string name, Nullable<object> value) => new ULong(name, value.As<ulong>());
+        protected override Argument CreateArgument(string name, Delegate? type) => new ULong(name, (ULong.Parser?)type);
+        protected override Argument CreateArgument(string name, Nullable<object> value) => new ULong(name, value.As<ulong>());
     }
 }

@@ -8,7 +8,7 @@ public partial class Argument {
         public UIntAttribute() : base(UInt.DefaultParser) { }
         public UIntAttribute(uint constant) : base(constant) { }
         public UIntAttribute(Type parserOwner, string? parserName = null) : base(parserOwner, parserName) { }
-        internal override Argument CreateArgument(string name, Delegate? type) => new UInt(name, (UInt.Parser?)type);
-        internal override Argument CreateArgument(string name, Nullable<object> value) => new UInt(name, value.As<uint>());
+        protected override Argument CreateArgument(string name, Delegate? type) => new UInt(name, (UInt.Parser?)type);
+        protected override Argument CreateArgument(string name, Nullable<object> value) => new UInt(name, value.As<uint>());
     }
 }
