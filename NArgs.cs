@@ -15,6 +15,11 @@ public readonly struct NArgs {
 
     public static implicit operator int(NArgs n) => n.Value;
     public static implicit operator NArgs(int c) => new(c);
+    public static implicit operator NArgs(char c) =>
+        c is '*' ? ZERO_OR_MORE :
+        c is '?' ? OPTIONAL :
+        c is '+' ? ONE_OR_MORE :
+        throw new ArgumentException($"Invalid descriptor character '{c}' (*,?,+ allowed)");
 
     public static bool operator ==(NArgs l, NArgs r) => l.Equals(r);
     public static bool operator !=(NArgs l, NArgs r) => !l.Equals(r);
