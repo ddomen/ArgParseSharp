@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>10.0</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<ApplicationIcon>icon.ico</ApplicationIcon>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Version>0.1.0-beta</Version>
+		<Authors>ddomen</Authors>
+		<Description>A simple and ready to use command-line argument parser for .NET Standard</Description>
+		<LicenseUrl>https://www.gnu.org/licenses/gpl-3.0.html</LicenseUrl>
+		<RepositoryUrl>https://github.com/ddomen/ArgParseSharp</RepositoryUrl>
+		<ReleaseNotes>Created nuget package</ReleaseNotes>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<PackageLicenseExpression>GPL v3</PackageLicenseExpression>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Content Include="icon.ico" />
+		<Content Include="LICENSE" />
+	</ItemGroup>
+
+</Project>
