@@ -7,6 +7,7 @@ public partial class Argument {
     protected string _name;
     protected Delegate? _type;
     protected Nullable<object> _constant;
+    protected Nullable<object> _default;
     public string Name {
         get => _name;
         set => _name = value ?? throw new ArgumentNullException(nameof(value));
@@ -17,7 +18,10 @@ public partial class Argument {
         get => _constant;
         set => SetConstant(value);
     }
-    public Nullable<object> Default { get; set; }
+    public Nullable<object> Default {
+        get => _default;
+        set => _default = value;
+    }
     public Delegate? Type {
         get => _type;
         set => SetType(_type);
@@ -136,6 +140,11 @@ public partial class Argument {
                 value = values.ToArray();
                 break;
             }
+            case NArgs.VALUE_ONE: {
+                index++;
+                value = Parse(arguments[index++]);
+                break;
+            }
             default: {
                 int len = nargs.Value;
                 if (index + len >= arguments.Length) { throw new ArgumentException("Not enough values"); }
@@ -157,12 +166,12 @@ public partial class Argument {
 
 public class Argument<T> : Argument {
     public new Nullable<T> Constant {
-        get => base.Constant.HasValue && base.Constant.Value is T v ? v : default;
-        set => base.Constant = value;
+        get => _constant.Cast<T>();
+        set => _constant = value;
     }
     public new Nullable<T> Default {
-        get => base.Default.HasValue && base.Default.Value is T v ? v : default;
-        set => base.Default = value;
+        get => _default.Cast<T>();
+        set => _default = value;
     }
     public Argument(string name, T? constant) : base(name, constant) { Default = default(T); }
     public Argument(string name, Parser? type) : base(name, type) { Default = default(T); }
@@ -179,7 +188,7 @@ public class Argument<T> : Argument {
     protected override void CheckDelegate(MethodInfo? method) {
         if (Constant.HasValue) { return; }
         base.CheckDelegate(method);
-        if (CheckReturn(method, typeof(T))) { throw new ArgumentException($"Type must return a value of type {typeof(T)}"); }
+        if (!CheckReturn(method, typeof(T))) { throw new ArgumentException($"Type must return a value of type {typeof(T)} but returned {method?.ReturnType}"); }
     }
 
     public new delegate T? Parser(string value);

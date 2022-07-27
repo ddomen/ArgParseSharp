@@ -36,12 +36,14 @@ public class ArgumentAttribtue : Attribute {
         (Flags ?? Enumerable.Empty<string>()).Prepend(Name);
 
     protected virtual Type _resultType => typeof(object);
+    protected virtual Type _delegateType => typeof(Argument.Parser);
 
     public ArgumentAttribtue(object? constant) => Constant = constant;
     public ArgumentAttribtue(Type parserOwner, string? parserName = null) => SetType(parserOwner, parserName);
+    protected ArgumentAttribtue(Delegate? type) => SetType(type);
     protected void CheckDelegate(MethodInfo? method) {
         if (method is null) { throw new ArgumentNullException("type"); }
-        if (CheckReturn(method, _resultType)) { throw new ArgumentException("Type must return a value"); }
+        if (!CheckReturn(method, _resultType)) { throw new ArgumentException($"Expected parser to return {_resultType} but it returned {method.ReturnType}"); }
         if (!CheckParameters(method, typeof(string))) { throw new ArgumentException("Type must have a string parameter"); }
     }
 
@@ -80,10 +82,15 @@ public class ArgumentAttribtue : Attribute {
     internal Argument CreateArgument(string name) =>
         Constant.HasValue ?
             CreateArgument(name, Constant) :
-            CreateArgument(name, Type);
+            CreateArgument(name, MakeDelegate(Type));
     internal virtual Argument CreateArgument(string name, Nullable<object> constant) => new(name, constant);
     internal virtual Argument CreateArgument(string name, Delegate? type) => new(name, type);
-
+    internal virtual Delegate? MakeDelegate(Delegate? target) =>
+        target is null ? null :
+        _delegateType.IsInstanceOfType(target) ? target :
+        target.Method.IsStatic ?
+        Delegate.CreateDelegate(_delegateType, target.Method) :
+        Delegate.CreateDelegate(_delegateType, target.Target, target.Method);
 
     public void SetType(Delegate? type) {
         CheckDelegate(type?.Method);

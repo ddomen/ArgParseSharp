@@ -9,12 +9,13 @@ public readonly struct Nullable<T> {
         HasValue = true;
     }
 
-    internal R? As<R>() =>
+    public R? As<R>() =>
         HasValue ?
             Value is R r ? r :
             typeof(IConvertible).IsAssignableFrom(typeof(R)) && Value is IConvertible c ? (R)c.ToType(typeof(R), null) :
-        default : default
-        ;
+        default : default;
+
+    public Nullable<R> Cast<R>() => HasValue && Value is R r ? new(r) : default;
 
     public override bool Equals(object obj) =>
         obj is T t ? HasValue && Equals(Value, t) :
